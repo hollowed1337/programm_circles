@@ -9,7 +9,7 @@ class BaseModel(Base):
 
     id = Column(Integer, primary_key = True, index = True)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f"<{type(self).__name__}(id={self.id})>"
 
 class User(BaseModel):
@@ -44,7 +44,3 @@ class Deposit(BaseModel):
     shelf_life = Column(Integer)
     bet = Column(Integer)
     accounts = relationship("Account", back_populates = "owner_dep")
-
-def deltatime(mouth):
-    days = mouth*30
-    return days

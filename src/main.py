@@ -9,7 +9,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 #Зависимости 
-def get_db():
+def get_db():   # pragma: no cover
     """
     Задаем зависимость к БД
     При каждом запросе будет 
@@ -31,14 +31,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user_passport = crud.get_user_by_passport(db, passport=user.passport)
     if db_user: 
         raise HTTPException(status_code=400, detail="Email already registered")
-    if db_user_phone:
-        raise HTTPException(status_code=1004, detail="Номер телефона уже используется")
-    if db_user_passport:
+    elif db_user_phone:
+        raise HTTPException(status_code=400, detail="Номер телефона уже используется")
+    elif db_user_passport:
         raise HTTPException(status_code=400, detail="Номер пасспорта уже используется")
     return crud.create_user(db=db, user=user)
 
 @app.get("/users/", response_model=list[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     Получение списка пользователей
     """
@@ -46,8 +46,8 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
-@app.get("/users/{user_id}", response_model=schemas.User)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+@app.get("/user/{user_id}", response_model=schemas.User)
+def get_user(user_id: int, db: Session = Depends(get_db)):
     """
     Получение пользователя по id
     Если такого нет - выдется ошибка"""
@@ -68,8 +68,18 @@ def create_dep(dep: schemas.DepositCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=201, detail="Вклад с таким наименованием уже существует")
     return crud.create_dep(db=db, deposit=dep)
 
+@app.get("/dep/{dep_id}", response_model=schemas.Deposit)
+def get_dep(dep_id: int, db: Session = Depends(get_db)):
+    """
+    Получение пользователя по id
+    Если такого нет - выдется ошибка"""
 
-@app.get("/dep/", response_model=list[schemas.Deposit])
+    db_user = crud.get_deposit(db, dep_id=dep_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="Deposit not found")
+    return db_user
+
+@app.get("/deps/", response_model=list[schemas.Deposit])
 def read_deposits(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     Получение списка вкладов
@@ -78,18 +88,17 @@ def read_deposits(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     return deposits
 
 
-@app.post("/accounts/", response_model=schemas.Account)
-def create_acc(acc: schemas.AccountCreate, owner_acc_id: int, owner_dep_id: int, db: Session = Depends(get_db)):
-    """
-    Создание вклада
-    """
-    db_acc_user = crud.get_accounts_by_user_id(db, owner_acc_id=owner_acc_id)
-    db_acc_depo = crud.get_accounts_by_depo_id(db, owner_dep_id=owner_dep_id)
-    if not db_acc_user:
+@app.post("/account/", response_model=schemas.Account)
+def create_acc(acc: schemas.AccountCreate,db: Session = Depends(get_db)):
+
+    db_acc_user = crud.get_user(db, user_id=acc.owner_acc_id)
+    db_acc_depo = crud.get_deposit(db, dep_id=acc.owner_dep_id)
+    if db_acc_user is None:
          raise HTTPException(status_code=404, detail="Пользователя с таким кодом не существует")
-    if not db_acc_depo:
+    if db_acc_depo is None: 
         raise HTTPException(status_code=404, detail="Вклада с таким кодом не существует")
-    return crud.create_account(db=db, account=acc, user_id=owner_acc_id, depo_id=owner_dep_id)
+    return crud.create_account(db=db, account=acc, user_id=acc.owner_acc_id, depo_id=acc.owner_dep_id)
+
 
 @app.get("/accounts/", response_model=list[schemas.Account])
 def read_accounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -100,12 +109,12 @@ def read_accounts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     return accounts
 
 
-@app.get("/accounts/{user_id}", response_model=list[schemas.Account])
-def read_accounts_by_user_id(owner_acc_id: int, db: Session = Depends(get_db)):
+@app.get("/accounts/user/{user_id}", response_model=list[schemas.Account])
+def read_accounts_by_user_id(user_id: int, db: Session = Depends(get_db)):
     """
     Получение списка счетов по коду клиента
     """
-    accounts = crud.get_accounts_by_user_id(db, owner_acc_id=owner_acc_id)
-    if accounts is None:
+    accounts = crud.read_accounts_by_user_id(db, user_id=user_id)
+    if not accounts:
         raise HTTPException(status_code=404, detail="User not found")
     return accounts

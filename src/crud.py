@@ -22,8 +22,7 @@ def create_account(db: Session, account: schemas.AccountCreate, user_id: int, de
     depo = db.query(models.Deposit).filter(models.Deposit.id == depo_id).one()
     date_open = datetime.now()
     date_close = date_open + timedelta(days=depo.shelf_life*30)
-    db_accout = models.Account(**account.dict(), owner_acc_id = user_id, owner_dep_id = depo_id, date_open=date_open, date_close=date_close)
-    #db_accout = models.Account(**account.dict(), owner_acc_id = user_id, owner_dep_id = depo_id)
+    db_accout = models.Account(**account.dict(), date_open=date_open, date_close=date_close)
     db.add(db_accout)
     db.commit()
     db.refresh(db_accout)
@@ -60,22 +59,13 @@ def get_user_by_passport(db: Session, passport: int):
     return db.query(models.User).filter(models.User.passport == passport).first()
     
 def get_accounts(db: Session, skip: int = 0, limit: int = 100):
-    """
-    Получить список предметов из базы данных
-    skip - пропуск записей
-    limit - максимальное кол-во записей 
-    """
+    
     return db.query(models.Account).offset(skip).limit(limit).all()
 
-def get_accounts_by_user_id(db: Session, owner_acc_id: int):
+def read_accounts_by_user_id(db: Session, user_id: int):
     
-    return db.query(models.Account).filter(models.Account.owner_dep_id == models.User.id).all()
-    #return db.query(models.Account).filter(models.Account.owner_acc_id == models.User.id).filter(models.User.id == owner_acc_id).all()
-
-def get_accounts_by_depo_id(db: Session, owner_dep_id: int):
-
-    return db.query(models.Account).filter(models.Account.owner_dep_id == models.Deposit.id).all()
-    #return db.query(models.Account).filter(models.Account.owner_dep_id == models.Deposit.id).filter(models.Deposit.id == owner_dep_id).all()
+    return db.query(models.Account).filter(models.Account.owner_acc_id == user_id).all()
+    #return db.query(models.Account).filter(models.User.id == user_id).filter(models.Account.owner_acc_id == models.User.id).all()
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):
 
@@ -88,3 +78,7 @@ def get_deposits(db: Session, skip: int = 0, limit: int =100):
 def get_deposit_by_name(db: Session, deposit_name: str):
 
     return db.query(models.Deposit).filter(models.Deposit.deposit_name == deposit_name).first()
+
+def get_deposit(db: Session, dep_id: int):
+
+    return db.query(models.Deposit).filter(dep_id == models.Deposit.id).first()

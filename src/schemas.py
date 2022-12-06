@@ -1,5 +1,7 @@
 from datetime import date
+
 from pydantic import BaseModel
+from typing import Optional
 
 class DepositBase(BaseModel):
     """
@@ -33,7 +35,7 @@ class UserBase(BaseModel):
     """
     user_name: str
     passport: int
-    address: str
+    address: Optional [str]
     phone: int
     email: str
 
@@ -54,17 +56,15 @@ class User(UserBase):
 
 class AccountBase(BaseModel):
 
-    amount: int 
-    # date_open: date
-    # date_close: date
+    amount: int
+    owner_acc_id: int
+    owner_dep_id: int
 
 class AccountCreate(AccountBase):
     pass
 
 class Account(AccountBase):
 
-    owner_acc_id: int
-    owner_dep_id: int
     date_open: date
     date_close: date | None=None
     id: int
