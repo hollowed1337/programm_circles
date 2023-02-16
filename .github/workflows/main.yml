@@ -64,10 +64,10 @@ jobs:
       - name: Test ssh
         run: ssh yandex_server 'echo hello'
       - name: Rsync files to server
-        run: sudo rsync -rav * yandex_server:~/project
+        run: rsync -rav * yandex_server:~/project
         # Отправляем файл .env на сервер
       - name: Rsync files to server
-        run: sudo rsync -rav .env yandex_server:~/project/.env
+        run: rsync -rav .env yandex_server:~/project/.env
         # Останавливаем контейнеры на сервере
       - name: Stop containers
         run: ssh yandex_server 'sudo docker-compose -f project/docker-compose.yml down'
