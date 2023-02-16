@@ -3,7 +3,7 @@ name: progr_circl
 # Триггер по которому будет срабатывать workflow, в данном случае при отправке кода в ветку master
 on:
   push:
-     branches: [master]
+     branches: [main]
 # Перечисление списка задач в данном workflow
 jobs:
   # Задача тестирования
