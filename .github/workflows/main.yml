@@ -62,10 +62,10 @@ jobs:
           END
         # Отправляем файлы проекта на сервер
       - name: Rsync files to server
-        run: rsync -rav * yandex_server:~/project
+        run: sudo rsync -rav * yandex_server:~/project
         # Отправляем файл .env на сервер
       - name: Rsync files to server
-        run: rsync -rav .env yandex_server:~/project/.env
+        run: sudo rsync -rav .env yandex_server:~/project/.env
         # Останавливаем контейнеры на сервере
       - name: Stop containers
         run: ssh yandex_server 'sudo docker-compose -f project/docker-compose.yml down'
